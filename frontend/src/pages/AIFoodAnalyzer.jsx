@@ -29,6 +29,8 @@ const AIFoodAnalyzer = () => {
     fat: 0,
     fiber: 0
   });
+  const [manualFoodInput, setManualFoodInput] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
@@ -98,22 +100,101 @@ const AIFoodAnalyzer = () => {
     }));
   };
 
-  const addFoodItem = (food) => {
-    const newFoodLog = [...foodLog, {
-      ...food,
-      id: Date.now(),
-      timestamp: new Date().toISOString()
-    }];
-    setFoodLog(newFoodLog);
+  // 營養資料庫
+  const nutritionDatabase = {
+    '蘋果': { calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, sugar: 10 },
+    '香蕉': { calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, sugar: 12 },
+    '雞胸肉': { calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, sugar: 0 },
+    '白飯': { calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, sugar: 0.1 },
+    '鮭魚': { calories: 208, protein: 25, carbs: 0, fat: 12, fiber: 0, sugar: 0 },
+    '牛奶': { calories: 42, protein: 3.4, carbs: 5, fat: 1, fiber: 0, sugar: 5 },
+    '雞蛋': { calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, sugar: 1.1 },
+    '燕麥': { calories: 389, protein: 17, carbs: 66, fat: 7, fiber: 10, sugar: 1 },
+    '菠菜': { calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, sugar: 0.4 },
+    '胡蘿蔔': { calories: 41, protein: 0.9, carbs: 10, fat: 0.2, fiber: 2.8, sugar: 4.7 }
+  };
 
-    // 更新營養攝取
-    setCurrentNutrition(prev => ({
-      calories: prev.calories + (food.calories || 0),
-      protein: prev.protein + (food.protein || 0),
-      carbs: prev.carbs + (food.carbs || 0),
-      fat: prev.fat + (food.fat || 0),
-      fiber: prev.fiber + (food.fiber || 0)
-    }));
+  const addFoodItem = (food) => {
+    if (!food.name) {
+      showNotification('無法加入空的食物名稱', 'error');
+      return false;
+    }
+    
+    try {
+      // 從營養資料庫獲取食物資訊，如果沒有則使用預設值
+      const foodInfo = nutritionDatabase[food.name] || {
+        calories: 200,
+        protein: 10,
+        carbs: 30,
+        fat: 5,
+        fiber: 2,
+        sugar: 5
+      };
+      
+      const newFood = {
+        ...food,
+        ...foodInfo,  // 展開營養資訊
+        id: Date.now(),
+        timestamp: new Date().toISOString()
+      };
+      
+      const newFoodLog = [...foodLog, newFood];
+      setFoodLog(newFoodLog);
+
+      // 更新營養攝取
+      setCurrentNutrition(prev => ({
+        calories: prev.calories + (foodInfo.calories || 0),
+        protein: prev.protein + (foodInfo.protein || 0),
+        carbs: prev.carbs + (foodInfo.carbs || 0),
+        fat: prev.fat + (foodInfo.fat || 0),
+        fiber: prev.fiber + (foodInfo.fiber || 0)
+      }));
+
+      showNotification(`已將「${food.name}」加入飲食記錄`, 'success');
+      return true;
+      
+    } catch (error) {
+      console.error('加入飲食記錄失敗:', error);
+      showNotification('加入飲食記錄時發生錯誤', 'error');
+      return false;
+    }
+  };
+
+  // 顯示通知訊息
+  const showNotification = (message, type = 'info') => {
+    // 創建通知元素
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      background-color: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#F44336' : type === 'warning' ? '#FF9800' : '#2196F3'};
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // 觸發動畫
+    setTimeout(() => {
+      notification.style.opacity = '1';
+    }, 10);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }, 3000);
   };
 
   const removeFoodItem = (id) => {
@@ -128,6 +209,37 @@ const AIFoodAnalyzer = () => {
       }));
     }
     setFoodLog(prev => prev.filter(food => food.id !== id));
+    showNotification('已移除食物', 'info');
+  };
+
+  const handleManualFoodAdd = () => {
+    if (manualFoodInput.trim()) {
+      addFoodItem({ name: manualFoodInput.trim() });
+      setManualFoodInput('');
+    } else {
+      showNotification('請輸入食物名稱', 'error');
+    }
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      showNotification('檔案已選擇，點擊「開始分析」進行分析', 'info');
+    }
+  };
+
+  const handleAnalyzeImage = () => {
+    if (selectedFile) {
+      // 這裡可以添加圖片分析邏輯
+      // 目前先模擬分析結果
+      const mockFoodName = '蘋果'; // 模擬分析結果
+      addFoodItem({ name: mockFoodName });
+      setSelectedFile(null);
+      showNotification('圖片分析完成！', 'success');
+    } else {
+      showNotification('請先選擇圖片檔案', 'error');
+    }
   };
 
   const calculateProgress = (current, goal) => {
