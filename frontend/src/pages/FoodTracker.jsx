@@ -140,28 +140,28 @@ export default function FoodTracker() {
 
   // 圖片分析
   const analyzeImage = async (imageData) => {
-    setIsAnalyzing(true);
-    try {
+      setIsAnalyzing(true);
+      try {
       // 將 base64 圖片數據轉換為 Blob
       const base64Response = await fetch(imageData);
       const blob = await base64Response.blob();
       
       // 創建 FormData 並添加圖片
-      const formData = new FormData();
+        const formData = new FormData();
       formData.append('file', blob, 'food-image.jpg');
-      
+
       // 發送到後端 API
       const response = await fetch('http://localhost:8000/api/ai/analyze-food-image/', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('分析請求失敗');
-      }
-      
-      const data = await response.json();
-      
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('分析請求失敗');
+        }
+
+        const data = await response.json();
+
       // 模擬詳細的分析結果
       const mockAnalysis = {
         foodName: data.food_name,
@@ -189,12 +189,12 @@ export default function FoodTracker() {
       
       setAnalysisResults(mockAnalysis);
       
-    } catch (error) {
-      console.error('Error analyzing image:', error);
+      } catch (error) {
+        console.error('Error analyzing image:', error);
       alert('圖片分析失敗，請稍後再試');
-    } finally {
-      setIsAnalyzing(false);
-    }
+      } finally {
+        setIsAnalyzing(false);
+      }
   };
 
   // 個人資料處理
@@ -467,7 +467,7 @@ export default function FoodTracker() {
                         <p className="text-gray-500">支援 JPG、PNG 格式，最大 5MB</p>
                       </div>
                     )}
-                  </div>
+                        </div>
 
                   {/* 控制按鈕 */}
                   <div className="flex flex-wrap gap-4 justify-center mt-6">
@@ -488,15 +488,15 @@ export default function FoodTracker() {
                     <label className="flex items-center gap-2 bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors cursor-pointer">
                       <InboxArrowDownIcon className="h-5 w-5" />
                       上傳圖片
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
                     </label>
                   </div>
-                </div>
+                      </div>
 
                 {/* 載入中 */}
                 {isAnalyzing && (
@@ -517,10 +517,10 @@ export default function FoodTracker() {
                       >
                         + 加入記錄
                       </button>
-                    </div>
+                  </div>
 
                     <p className="text-gray-600 mb-6">{analysisResults.description}</p>
-
+                      
                     {/* 健康指數 */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -546,8 +546,8 @@ export default function FoodTracker() {
                             style={{ width: `${analysisResults.glycemicIndex}%` }}
                           ></div>
                         </div>
+                        </div>
                       </div>
-                    </div>
 
                     {/* 營養益處 */}
                     <div className="mb-6">
@@ -582,9 +582,9 @@ export default function FoodTracker() {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    </div>
-
+                          </div>
+                        </div>
+                        
                     {/* 維生素和礦物質 */}
                     {(analysisResults.vitamins || analysisResults.minerals) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -730,9 +730,9 @@ export default function FoodTracker() {
                   <button
                     onClick={saveProfile}
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all font-medium"
-                  >
+                      >
                     💾 儲存個人資料
-                  </button>
+                        </button>
                 </div>
               </div>
             </div>
@@ -783,7 +783,7 @@ export default function FoodTracker() {
                       </div>
                       <div className="text-sm opacity-90">目標熱量</div>
                     </div>
-                  </div>
+                      </div>
 
                   {/* 目標進度 */}
                   <div className="bg-white rounded-xl p-6 shadow-lg mb-8">
@@ -852,10 +852,10 @@ export default function FoodTracker() {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
+              </div>
               )}
             </div>
           )}
