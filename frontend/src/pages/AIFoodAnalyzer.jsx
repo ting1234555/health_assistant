@@ -278,7 +278,7 @@ const AnalyzerTab = ({ userProfile, onAddToDiary }) => {
         <div className="daily-recommendation">
           <div className="recommendation-title">💡 個人化建議</div>
           <div className="recommendation-text">
-                這份食物約佔您每日熱量建議的 {((analysis.nutrition?.calories / userProfile.dailyCalories) * 100).toFixed(0)}%。
+                這份食物約佔您每日熱量建議的 {Math.round((analysis.nutrition?.calories / userProfile.dailyCalories) * 100)}%。
               </div>
           </div>
           )}
@@ -782,6 +782,17 @@ export default function AIFoodAnalyzer() {
           </div>
           <button className="save-profile-btn">💾 儲存資料</button>
         </div>
+        {userProfile && (
+          <div className="profile-summary" style={{marginTop: '1.5rem', background: '#f5f7fa', borderRadius: '10px', padding: '1rem'}}>
+            <h4>您的每日建議：</h4>
+            <ul>
+              <li>熱量：{userProfile.dailyCalories} 卡</li>
+              <li>蛋白質：{userProfile.proteinGoal} g</li>
+              <li>纖維：{userProfile.fiberGoal} g</li>
+              <li>水分：{userProfile.waterGoal} ml</li>
+            </ul>
+          </div>
+        )}
       </div>
       <div id="tracking" className={`tab-content${tab === 'tracking' ? ' active' : ''}`}>
         <div id="trackingCheck" className="no-profile" style={{ display: 'none' }}>
