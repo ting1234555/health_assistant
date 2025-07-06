@@ -7,6 +7,9 @@ python-multipart==0.0.6
 requests==2.31.0
 python-dotenv==1.0.0
 
+# 資料庫
+sqlalchemy==2.0.23
+
 # AI 功能套件（修正版本）
 transformers==4.35.0
 torch==2.1.0
