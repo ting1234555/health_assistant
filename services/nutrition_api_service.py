@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # 從環境變數中獲取 API 金鑰
-USDA_API_KEY = os.getenv("USDA_API_KEY", "DEMO_KEY")
+USDA_API_KEY = os.getenv("USDA_API_KEY")
 USDA_API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 # 我們關心的主要營養素及其在 USDA API 中的名稱或編號
@@ -35,7 +35,7 @@ def fetch_nutrition_data(food_name: str):
     :return: 包含營養資訊的字典，如果找不到則返回 None。
     """
     if not USDA_API_KEY:
-        logger.error("USDA_API_KEY 未設定，無法查詢營養資訊。")
+        logger.error("USDA_API_KEY 未設定，無法查詢營養資訊。請在環境變數中設定 USDA_API_KEY")
         return None
 
     params = {

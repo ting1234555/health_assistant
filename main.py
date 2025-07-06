@@ -206,5 +206,5 @@ def generate_warnings(nutrition: Dict[str, Any]) -> List[str]:
     return warnings
 
 if __name__ == "__main__":
-    # It's better to run with `uvicorn backend.main:app --reload` from the project root.
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # For Hugging Face Spaces deployment
+    uvicorn.run("main:app", host="0.0.0.0", port=7860, reload=False)
