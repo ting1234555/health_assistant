@@ -4,12 +4,12 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 
-DB_DIR = "data"
+DB_DIR = "/tmp/data"
 os.makedirs(DB_DIR, exist_ok=True)
 
-
-# 資料庫 URL
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(DB_DIR, 'health_assistant.db')}"
+
+
 
 # 創建資料庫引擎
 engine = create_engine(
