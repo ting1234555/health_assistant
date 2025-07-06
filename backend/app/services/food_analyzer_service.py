@@ -1,6 +1,6 @@
 import torch
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from PIL import Image
 from io import BytesIO
 import base64
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class HybridFoodAnalyzer:
-    def __init__(self, claude_api_key: str = None):
+    def __init__(self, claude_api_key: Optional[str] = None):
         """
         Initialize the HybridFoodAnalyzer with HuggingFace model and Claude API.
         
@@ -53,7 +53,7 @@ class HybridFoodAnalyzer:
                 outputs = self.model(**inputs)
                 predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
             
-            predicted_class_id = predictions.argmax().item()
+            predicted_class_id = int(predictions.argmax().item())
             confidence = predictions[0][predicted_class_id].item()
             food_name = self.model.config.id2label[predicted_class_id]
             
@@ -119,7 +119,7 @@ class HybridFoodAnalyzer:
             )
             
             # Extract and parse the JSON response
-            response_text = message.content[0].text
+            response_text = message.content[0].get("text", "") if isinstance(message.content[0], dict) else str(message.content[0])
             try:
                 nutrition_data = json.loads(response_text.strip())
                 return {

@@ -18,17 +18,14 @@ def load_model():
     
     try:
         logger.info("正在載入食物辨識模型...")
-        
         # 載入模型 - 移除不支持的參數
         image_classifier = pipeline(
             "image-classification", 
             model="juliensimon/autotrain-food101-1471154053",
             device=-1  # 使用CPU
         )
-        
         logger.info("模型載入成功！")
         return True
-        
     except Exception as e:
         logger.error(f"模型載入失敗: {str(e)}")
         image_classifier = None
@@ -81,10 +78,10 @@ def classify_food_image(image_bytes: bytes) -> str:
                 
                 logger.info(f"辨識結果: {label}, 信心度: {confidence:.2f}")
                 
-                # 標籤可能包含底線，我們將其替換為空格，並讓首字母大寫
+            # 標籤可能包含底線，我們將其替換為空格，並讓首字母大寫
                 formatted_label = str(label).replace('_', ' ').title()
                 return formatted_label
-        
+            
         return "Unknown"
         
     except Exception as e:
@@ -94,3 +91,5 @@ def classify_food_image(image_bytes: bytes) -> str:
 # 在模塊載入時嘗試載入模型
 logger.info("初始化 AI 服務...")
 load_model()
+
+__all__ = ["classify_food_image"]

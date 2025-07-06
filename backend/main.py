@@ -114,8 +114,8 @@ async def analyze_nutrition(food_name: str, db: Session = Depends(get_db)):
             "fiber": food_item.fiber,
             "sugar": food_item.sugar,
             "sodium": food_item.sodium,
-        }
-
+            }
+        
         # Safely add details if they exist and are a dictionary
         if isinstance(food_item.details, dict):
             nutrition_details.update(food_item.details)

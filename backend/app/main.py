@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import ai_router, meal_router
-from .database import engine, Base
+from app.routers import ai_router, meal_router
+from app.database import engine, Base
 
 # 創建資料庫表
 Base.metadata.create_all(bind=engine)
