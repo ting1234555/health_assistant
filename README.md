@@ -22,34 +22,20 @@ A comprehensive health tracking application with AI-powered features.
 
 ## API Endpoints
 
-### Health Data
 - `POST /api/food/analyze` - Analyze food from image
 - `GET /api/nutrition/dashboard` - Get nutrition dashboard
 - `POST /api/exercise/log` - Log exercise data
 
-### User Management
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-
 ## Usage
 
-This API is designed to work with the frontend deployed on Vercel. 
+This API is designed to work with the frontend deployed on Vercel.
 
-### Example Request
-
+Example request:
 ```bash
-curl -X POST "https://your-space.hf.space/api/food/analyze" \
+curl -X POST "https://yuting111222-health-assistant.hf.space/api/food/analyze" \
   -H "Content-Type: multipart/form-data" \
   -F "image=@your-food-image.jpg"
 ```
-
-## Configuration
-
-The API automatically configures CORS for cross-origin requests and includes:
-- Image processing capabilities
-- AI model integration
-- Database connectivity
-- Authentication system
 
 ## Tech Stack
 
