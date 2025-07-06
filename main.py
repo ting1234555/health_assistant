@@ -11,17 +11,17 @@ import os
 from dotenv import load_dotenv
 
 # Database and services
-from .app.database import get_db
 from sqlalchemy.orm import Session
-from .app.models.nutrition import Nutrition
-from .app.services import nutrition_api_service
-
-# Routers
-from .app.routers import ai_router, meal_router
+from database import get_db
+from models.nutrition import Nutrition
+from services import nutrition_api_service
+from routers import ai_router, meal_router
 
 app = FastAPI(title="Health Assistant API")
 app.include_router(ai_router.router)
 app.include_router(meal_router.router) 
+
+
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +34,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class FoodRecognitionResponse(BaseModel):
     food_name: str
