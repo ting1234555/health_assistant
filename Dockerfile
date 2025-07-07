@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create data directory
-RUN mkdir -p /tmp/data
+RUN mkdir -p /data
 
 # Initialize database
 RUN python init_db.py
