@@ -9,6 +9,7 @@ COPY . .
 
 # Create data directory
 RUN mkdir -p /data
+RUN chmod 777 /data
 
 # Initialize database
 RUN python init_db.py
