@@ -31,6 +31,8 @@ function AIFoodAnalyzer() {
   const [stream, setStream] = useState(null);
   // Chart
   const chartRef = useRef(null);
+  // 新增一個 state 來存放預覽圖片的 URL
+  const [previewImage, setPreviewImage] = useState(null);
 
   // 初始化日記
   useEffect(() => {
@@ -115,13 +117,17 @@ function AIFoodAnalyzer() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(blob => {
-      if (blob) processImage(blob);
+      if (blob) {
+        setPreviewImage(URL.createObjectURL(blob));
+        processImage(blob);
+      }
       else setError('無法擷取圖片，請再試一次');
     }, 'image/jpeg');
   };
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setPreviewImage(URL.createObjectURL(file));
       processImage(file);
       e.target.value = '';
     }
@@ -213,8 +219,13 @@ function AIFoodAnalyzer() {
 
       {tab === 'analyzer' && (
         <div id="analyzerContent">
-          <div className="camera-container">
-            <video ref={videoRef} autoPlay playsInline style={{width:'100%',maxWidth:300, borderRadius:15, boxShadow:'0 5px 15px rgba(0,0,0,0.2)', background:'#000'}} />
+          <div className="camera-container" style={{position:'relative', width:'100%', maxWidth:300, margin:'0 auto'}}>
+            {/* 預覽圖片優先顯示，否則顯示相機畫面 */}
+            {previewImage ? (
+              <img src={previewImage} alt="預覽圖片" style={{width:'100%', borderRadius:15, boxShadow:'0 5px 15px rgba(0,0,0,0.2)', background:'#000', objectFit:'contain', maxHeight:220}} />
+            ) : (
+              <video ref={videoRef} autoPlay playsInline style={{width:'100%', borderRadius:15, boxShadow:'0 5px 15px rgba(0,0,0,0.2)', background:'#000'}} />
+            )}
             <canvas ref={canvasRef} style={{display:'none'}} />
           </div>
 
