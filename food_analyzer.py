@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
 import base64
-from transformers import pipeline
+from transformers.pipelines import pipeline  # 修正匯入
 import requests
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 import uvicorn
 
@@ -245,33 +245,26 @@ async def analyze_food(file: UploadFile = File(...)):
         # 檢查模型是否載入成功
         if not food_classifier:
             raise HTTPException(status_code=500, detail="AI模型尚未載入，請稍後再試")
-        
         # 檢查文件類型
-        if not file.content_type.startswith("image/"):
+        if not file.content_type or not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="請上傳圖片文件")
-        
         # 讀取圖片
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
-        
         # 確保圖片是RGB格式
         if image.mode != "RGB":
             image = image.convert("RGB")
-        
         # 使用AI模型進行食物辨識
         results = food_classifier(image)
-        
-        # 獲取最高信心度的結果
+        if not isinstance(results, list) or not results:
+            raise HTTPException(status_code=500, detail="AI模型辨識失敗")
         top_result = results[0]
-        food_name = top_result["label"]
-        confidence = top_result["score"]
-        
+        food_name = str(top_result.get("label", "Unknown"))
+        confidence = float(top_result.get("score", 0.0))
         # 獲取營養資訊
         nutrition_info = get_nutrition_info(food_name)
-        
         # 生成AI建議
         ai_suggestions = generate_ai_suggestions(food_name, nutrition_info)
-        
         return FoodAnalysisResponse(
             success=True,
             food_name=food_name,
@@ -280,7 +273,6 @@ async def analyze_food(file: UploadFile = File(...)):
             ai_suggestions=ai_suggestions,
             message="食物分析完成"
         )
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"分析失敗: {str(e)}")
 
@@ -291,38 +283,30 @@ async def analyze_food_base64(image_data: dict):
         # 檢查模型是否載入成功
         if not food_classifier:
             raise HTTPException(status_code=500, detail="AI模型尚未載入，請稍後再試")
-        
         # 解碼base64圖片
         base64_string = image_data.get("image", "")
         if not base64_string:
             raise HTTPException(status_code=400, detail="缺少圖片資料")
-        
         # 移除base64前綴（如果有的話）
         if "," in base64_string:
-            base64_string = base64_string.split(",")[1]
-        
+            base64_string = base64_string.split(",", 1)[1]
         # 解碼圖片
         image_bytes = base64.b64decode(base64_string)
         image = Image.open(io.BytesIO(image_bytes))
-        
         # 確保圖片是RGB格式
         if image.mode != "RGB":
             image = image.convert("RGB")
-        
         # 使用AI模型進行食物辨識
         results = food_classifier(image)
-        
-        # 獲取最高信心度的結果
+        if not isinstance(results, list) or not results:
+            raise HTTPException(status_code=500, detail="AI模型辨識失敗")
         top_result = results[0]
-        food_name = top_result["label"]
-        confidence = top_result["score"]
-        
+        food_name = str(top_result.get("label", "Unknown"))
+        confidence = float(top_result.get("score", 0.0))
         # 獲取營養資訊
         nutrition_info = get_nutrition_info(food_name)
-        
         # 生成AI建議
         ai_suggestions = generate_ai_suggestions(food_name, nutrition_info)
-        
         return FoodAnalysisResponse(
             success=True,
             food_name=food_name,
@@ -331,7 +315,6 @@ async def analyze_food_base64(image_data: dict):
             ai_suggestions=ai_suggestions,
             message="食物分析完成"
         )
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"分析失敗: {str(e)}")
 
