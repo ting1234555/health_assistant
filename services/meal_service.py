@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from ..models.meal_log import MealLog
+from models.meal_log import MealLog
 
 class MealService:
     def __init__(self, db: Session):
