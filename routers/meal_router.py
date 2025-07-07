@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from ..services.meal_service import MealService
-from ..database import get_db
+from services.meal_service import MealService
+from database import get_db
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/meals", tags=["Meals"])

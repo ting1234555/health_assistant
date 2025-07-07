@@ -1,6 +1,6 @@
 # backend/app/models/nutrition.py
 from sqlalchemy import Column, Integer, String, Float, JSON
-from ..database import Base
+from database import Base
 
 class Nutrition(Base):
     __tablename__ = "nutrition"

@@ -1,8 +1,8 @@
 # 檔案路徑: backend/app/routers/ai_router.py
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
-from ..services.ai_service import classify_food_image  # 直接引入分類函式
-from ..services.nutrition_api_service import fetch_nutrition_data  # 匯入營養查詢函式
+from services.ai_service import classify_food_image  # 直接引入分類函式
+from services.nutrition_api_service import fetch_nutrition_data  # 匯入營養查詢函式
 
 router = APIRouter(
     prefix="/ai",
