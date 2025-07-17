@@ -139,7 +139,7 @@ function AIFoodAnalyzer() {
     const formData = new FormData();
     formData.append('file', imageSource);
     try {
-      const aiResponse = await fetch(`${API_BASE_URL}/ai/analyze-food-image/`, {
+      const aiResponse = await fetch(`${API_BASE_URL}/ai/analyze-food-image-with-weight/`, {
         method: 'POST', body: formData,
       });
       if (!aiResponse.ok) {
@@ -147,17 +147,22 @@ function AIFoodAnalyzer() {
         throw new Error(errorData.detail || `AI辨識失敗 (狀態碼: ${aiResponse.status})`);
       }
       const aiData = await aiResponse.json();
-      const foodName = aiData.food_name;
+      const foodName = aiData.food_type;
       if (!foodName || foodName === 'Unknown') throw new Error('AI無法辨識出食物名稱。');
       let analysis = {
         foodName,
-        description: `AI 辨識結果：${foodName}`,
+        description: `AI 辨識結果：${foodName}` + (aiData.note ? `（${aiData.note}）` : ''),
         healthIndex: 75,
         glycemicIndex: 50,
         benefits: [`含有 ${foodName} 的營養成分`],
-        nutrition: { calories: 150, protein: 8, carbs: 20, fat: 5, fiber: 3, sugar: 2 },
+        nutrition: aiData.nutrition || { calories: 150, protein: 8, carbs: 20, fat: 5, fiber: 3, sugar: 2 },
         vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
-        minerals: { 'Iron': 2, 'Calcium': 50 }
+        minerals: { 'Iron': 2, 'Calcium': 50 },
+        estimatedWeight: aiData.estimated_weight,
+        weightConfidence: aiData.weight_confidence,
+        weightErrorRange: aiData.weight_error_range,
+        referenceObject: aiData.reference_object,
+        note: aiData.note
       };
       setResult(analysis);
     } catch (err) {
@@ -250,6 +255,14 @@ function AIFoodAnalyzer() {
               <div className="food-info">
                 <h3 className="food-name">{result.foodName}</h3>
                 <button className="add-to-diary" onClick={addToFoodDiary}>加入飲食記錄</button>
+              </div>
+              {/* 顯示重量、信心度、誤差範圍 */}
+              <div className="weight-estimation" style={{margin:'1rem 0', textAlign:'center'}}>
+                <div>預估重量：<b>{result.estimatedWeight ? `${result.estimatedWeight} g` : '--'}</b></div>
+                <div>信心度：<b>{result.weightConfidence ? `${Math.round(result.weightConfidence*100)}%` : '--'}</b></div>
+                <div>誤差範圍：<b>{result.weightErrorRange ? `${result.weightErrorRange[0]} ~ ${result.weightErrorRange[1]} g` : '--'}</b></div>
+                {result.referenceObject && <div>參考物：{result.referenceObject}</div>}
+                {result.note && <div style={{color:'#888', fontSize:'0.95em'}}>{result.note}</div>}
               </div>
 
               <div className="health-indices">
