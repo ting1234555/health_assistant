@@ -8,6 +8,9 @@ from app.database import engine, Base
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
 os.environ["HF_HOME"] = "/tmp/hf_home"
 os.environ["TORCH_HOME"] = "/tmp/torch_home"
+os.environ["HF_DATASETS_CACHE"] = "/tmp/hf_datasets"
+os.environ["XDG_CACHE_HOME"] = "/tmp/xdg_cache"
+os.environ["DATASET_CACHE_DIR"] = "/tmp/dataset_cache"
 
 # 創建資料庫表
 Base.metadata.create_all(bind=engine)
