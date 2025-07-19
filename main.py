@@ -4,6 +4,10 @@ from app.routers import ai_router
 
 app = FastAPI(title="Health Assistant API")
 
+
+import sys
+print("PYTHONPATH:", sys.path)
+
 # 配置 CORS
 app.add_middleware(
     CORSMiddleware,
