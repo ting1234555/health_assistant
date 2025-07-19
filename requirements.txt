@@ -10,6 +10,17 @@ anthropic>=0.18.0
 python-dotenv>=1.0.0
 httpx>=0.27.0
 
+# Weight estimation dependencies
+numpy>=1.24.0
+opencv-python>=4.8.0
+ultralytics>=8.0.0
+
+# Database
+sqlalchemy>=2.0.23
+
+# AI 功能套件（修正版本）
+torchvision>=0.16.0
+
 # Development dependencies
 pytest>=8.4.1
 pytest-cov>=6.2.1
@@ -17,4 +28,3 @@ pytest-asyncio>=1.0.0
 black>=24.4.2
 isort>=5.13.2
 mypy>=1.10.0
-sqlalchemy
