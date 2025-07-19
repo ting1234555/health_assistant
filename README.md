@@ -1,3 +1,11 @@
+---
+title: Health Assistant
+emoji: 🏥
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
 # Health Assistant AI
 
 一個整合飲食追蹤、運動記錄和AI圖像辨識的健康生活助手應用。
