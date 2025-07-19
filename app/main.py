@@ -1,13 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import ai_router, meal_router
+from app.database import engine, Base
+
+# 創建資料庫表
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Health Assistant API")
 
 # 配置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允許所有來源
+    allow_origins=["http://localhost:5173"],  # React 開發伺服器的位址
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
