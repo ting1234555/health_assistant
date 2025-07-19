@@ -4,8 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import ai_router, meal_router
 from app.database import engine, Base
 
-# 設定 Hugging Face cache 目錄
+# 設定 Hugging Face 及 Torch 快取目錄
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+os.environ["HF_HOME"] = "/tmp/hf_home"
+os.environ["TORCH_HOME"] = "/tmp/torch_home"
 
 # 創建資料庫表
 Base.metadata.create_all(bind=engine)
