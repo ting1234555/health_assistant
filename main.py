@@ -1,7 +1,11 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import ai_router, meal_router
 from app.database import engine, Base
+
+# 設定 Hugging Face cache 目錄
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
 
 # 創建資料庫表
 Base.metadata.create_all(bind=engine)
