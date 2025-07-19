@@ -10,7 +10,7 @@ from PIL import Image
 import json
 from dotenv import load_dotenv
 
-# 加入所有 cache 目錄設定
+# 設定 Hugging Face 及 Torch 快取目錄
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
 os.environ["HF_HOME"] = "/tmp/hf_home"
 os.environ["TORCH_HOME"] = "/tmp/torch_home"
