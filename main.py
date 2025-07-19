@@ -19,6 +19,7 @@ from .app.services import nutrition_api_service
 # Routers
 from .app.routers import ai_router, meal_router
 
+
 app = FastAPI(title="Health Assistant API")
 app.include_router(ai_router.router)
 app.include_router(meal_router.router) 
