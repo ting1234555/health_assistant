@@ -36,6 +36,8 @@ app.add_middleware(
 )
 
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+os.environ["HF_HOME"] = "/tmp/hf_home"
+os.environ["TORCH_HOME"] = "/tmp/torch_home"
 
 class FoodRecognitionResponse(BaseModel):
     food_name: str
