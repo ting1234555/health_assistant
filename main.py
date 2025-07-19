@@ -9,6 +9,8 @@ from io import BytesIO
 from PIL import Image
 import json
 from dotenv import load_dotenv
+from .app.database import engine, Base
+from .app.routers import ai_router, meal_router
 
 # 設定 Hugging Face 及 Torch 快取目錄
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
@@ -17,15 +19,6 @@ os.environ["TORCH_HOME"] = "/tmp/torch_home"
 os.environ["HF_DATASETS_CACHE"] = "/tmp/hf_datasets"
 os.environ["XDG_CACHE_HOME"] = "/tmp/xdg_cache"
 os.environ["DATASET_CACHE_DIR"] = "/tmp/dataset_cache"
-
-# Database and services
-from .app.database import get_db, engine, Base
-from sqlalchemy.orm import Session
-from .app.models.nutrition import Nutrition
-from .app.services import nutrition_api_service
-
-# Routers
-from .app.routers import ai_router, meal_router
 
 # 創建資料庫表
 Base.metadata.create_all(bind=engine)
