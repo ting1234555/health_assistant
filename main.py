@@ -35,6 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+
 class FoodRecognitionResponse(BaseModel):
     food_name: str
     chinese_name: str
