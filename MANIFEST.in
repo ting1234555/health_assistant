@@ -1,8 +1,0 @@
-include README.md
-include requirements.txt
-include .coveragerc
-include pytest.ini
-recursive-include backend/app/templates *
-recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
