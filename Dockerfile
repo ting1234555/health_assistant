@@ -14,5 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV PORT=7860
+ENV TRANSFORMERS_CACHE=/tmp/hf_cache
+ENV HF_HOME=/tmp/hf_home
+ENV TORCH_HOME=/tmp/torch_home
+ENV HF_DATASETS_CACHE=/tmp/hf_datasets
+ENV XDG_CACHE_HOME=/tmp/xdg_cache
+ENV DATASET_CACHE_DIR=/tmp/dataset_cache
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"] 
