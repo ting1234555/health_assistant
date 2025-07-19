@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # 確保資料庫目錄存在
-DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DB_DIR = "/tmp/health_assistant_data"
 os.makedirs(DB_DIR, exist_ok=True)
 
 # 資料庫 URL
