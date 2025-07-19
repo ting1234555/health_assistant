@@ -1,11 +1,8 @@
-# 檔案路徑: backend/app/routers/ai_router.py
+# 檔案路徑: app/routers/ai_router.py
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
-from ..services.ai_service import classify_food_image  # 直接引入分類函式
-from ..services.nutrition_api_service import fetch_nutrition_data  # 匯入營養查詢函式
-from ..services.weight_estimation_service import estimate_food_weight  # 新增重量估算服務
 
 router = APIRouter(
     prefix="/ai",
@@ -36,21 +33,8 @@ async def analyze_food_image_endpoint(file: UploadFile = File(...)):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="上傳的檔案不是圖片格式。")
 
-    # 讀取圖片的二進位制內容
-    image_bytes = await file.read()
-    
-    # 呼叫 AI 服務中的分類函式
-    food_name = classify_food_image(image_bytes)
-
-    # 查詢營養資訊
-    nutrition_info = fetch_nutrition_data(food_name)
-    if nutrition_info is None:
-        raise HTTPException(status_code=404, detail=f"找不到 {food_name} 的營養資訊。")
-
-    # TODO: 在下一階段，我們會在這裡加入從資料庫查詢營養資訊的邏輯
-    # 目前，我們先直接回傳辨識出的食物名稱
-    
-    return {"food_name": food_name, "nutrition_info": nutrition_info}
+    # 暫時返回測試回應
+    return {"food_name": "測試食物", "nutrition_info": {"calories": 100}}
 
 @router.post("/analyze-food-image-with-weight/", response_model=WeightEstimationResponse)
 async def analyze_food_image_with_weight_endpoint(file: UploadFile = File(...)):
@@ -62,25 +46,16 @@ async def analyze_food_image_with_weight_endpoint(file: UploadFile = File(...)):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="上傳的檔案不是圖片格式。")
 
-    # 讀取圖片的二進位制內容
-    image_bytes = await file.read()
-    
-    try:
-        # 整合分析：食物辨識 + 重量估算 + 營養查詢
-        result = await estimate_food_weight(image_bytes)
-        
-        return WeightEstimationResponse(
-            food_type=result["food_type"],
-            estimated_weight=result["estimated_weight"],
-            weight_confidence=result["weight_confidence"],
-            weight_error_range=result["weight_error_range"],
-            nutrition=result["nutrition"],
-            reference_object=result.get("reference_object"),
-            note=result["note"]
-        )
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析過程中發生錯誤: {str(e)}")
+    # 暫時返回測試回應
+    return WeightEstimationResponse(
+        food_type="測試食物",
+        estimated_weight=150.0,
+        weight_confidence=0.85,
+        weight_error_range=[130.0, 170.0],
+        nutrition={"calories": 100, "protein": 5, "fat": 2, "carbs": 15},
+        reference_object="硬幣",
+        note="測試重量估算結果"
+    )
 
 @router.get("/health")
 async def health_check():
