@@ -22,7 +22,8 @@ def load_model():
         image_classifier = pipeline(
             "image-classification", 
             model="juliensimon/autotrain-food101-1471154053",
-            device=-1  # 使用CPU
+            device=-1,  # 使用CPU
+            cache_dir="/tmp/huggingface"
         )
         logger.info("模型載入成功！")
         return True
