@@ -32,3 +32,6 @@ black>=24.4.2
 isort>=5.13.2
 mypy>=1.10.0
 sqlalchemy
+
+# Additional dependencies for enhanced functionality
+requests>=2.31.0
