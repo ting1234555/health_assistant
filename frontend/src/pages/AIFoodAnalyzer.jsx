@@ -297,55 +297,19 @@ function AIFoodAnalyzer() {
         throw new Error(errorData.detail || `AI辨識失敗 (狀態碼: ${aiResponse.status})`);
       }
       const aiData = await aiResponse.json();
-      
-      // V3 - 智慧降級處理
-      // Tier 1: 成功辨識
-      if (aiData.detected_foods && aiData.detected_foods.length > 0) {
-        setIsManualMode(false);
-        setIsAssistedMode(false);
-        // 以第一個辨識出的食物為主要顯示對象
-        const primaryFood = aiData.detected_foods[0];
-
-        let analysis = {
-          foodName: `${primaryFood.food_name}${aiData.detected_foods.length > 1 ? ` 等 ${aiData.detected_foods.length} 項` : ''}`,
-          description: `AI 辨識結果`,
-          healthIndex: 75,
-          glycemicIndex: 50,
-          benefits: [`含有 ${primaryFood.food_name} 的營養成分`],
-          // 營養素使用後端計算好的總和
-          nutrition: aiData.total_nutrition || primaryFood.nutrition, 
-          vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
-          minerals: { 'Iron': 2, 'Calcium': 50 },
-          // 重量也使用後端計算好的總和
-          estimatedWeight: aiData.total_estimated_weight,
-          // 其他欄位繼承後端回傳
-          weightConfidence: aiData.weight_confidence,
-          weightErrorRange: aiData.weight_error_range,
-          referenceObject: aiData.reference_object,
-          note: aiData.note, // 顯示我們精心設計的備註
-          // 儲存原始回傳，以便加入日記
-          originalResponse: aiData 
-        };
-
-        setResult(analysis);
-
-      // Tier 2: AI 重量估算失敗，但提供了食物建議
-      } else if (aiData.fallback_food_suggestion) {
-        setError(aiData.note);
-        setIsAssistedMode(true);
-        setIsManualMode(false);
-        setResult(null);
-        // 自動查詢建議的食物
-        setManualFoodName(aiData.fallback_food_suggestion.food_name);
-        handleManualLookup(aiData.fallback_food_suggestion.food_name);
-      
-      // Tier 3: 完全失敗，啟用手動模式
-      } else {
-        setError(aiData.note || 'AI無法辨識出任何食物項目，請嘗試手動輸入。');
-        setIsManualMode(true);
-        setIsAssistedMode(false);
-        setResult(null);
-      }
+      const foodName = aiData.food_name;
+      if (!foodName || foodName === 'Unknown') throw new Error('AI無法辨識出食物名稱。');
+      let analysis = {
+        foodName,
+        description: `AI 辨識結果：${foodName}`,
+        healthIndex: 75,
+        glycemicIndex: 50,
+        benefits: [`含有 ${foodName} 的營養成分`],
+        nutrition: { calories: 150, protein: 8, carbs: 20, fat: 5, fiber: 3, sugar: 2 },
+        vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
+        minerals: { 'Iron': 2, 'Calcium': 50 }
+      };
+      setResult(analysis);
     } catch (err) {
       const errorMessage = err.message || '分析時發生未知錯誤，請稍後再試。';
       setError(errorMessage);
@@ -473,39 +437,12 @@ function AIFoodAnalyzer() {
 
           {error && <div style={{color:'red',textAlign:'center',margin:'1rem 0'}}>{error}</div>}
 
-          {/* --- 顯示 AI 結果或手動輸入介面 --- */}
-          {!loading && (
-            <div className="analysis-section">
-              {/* AI 模式結果顯示 */}
-              {result && !isManualMode && !isAssistedMode && (
-                <div className="result" style={{display:'block'}}>
-                  <div className="food-info">
-                    <h3 className="food-name">{result.foodName}</h3>
-                    <button className="add-to-diary" onClick={addToFoodDiary}>加入飲食記錄</button>
-                  </div>
-                  {/* 顯示重量、信心度、誤差範圍 */}
-                  <div className="weight-estimation" style={{margin:'1rem 0', textAlign:'center'}}>
-                    <div>預估重量：<b>{manualWeight !== '' ? `${manualWeight} g (手動)` : result.estimatedWeight !== undefined ? `${Math.round(result.estimatedWeight)} g` : '--'}</b></div>
-                    <div>信心度：<b>{result.weightConfidence !== undefined ? `${Math.round(result.weightConfidence*100)}%` : '--'}</b></div>
-                    <div>誤差範圍：<b>{result.weightErrorRange ? `${Math.round(result.weight_error_range[0])} ~ ${Math.round(result.weight_error_range[1])} g` : '--'}</b></div>
-                    {result.referenceObject && <div>參考物：{result.referenceObject}</div>}
-                    {result.note && <div style={{color:'#888', fontSize:'0.95em'}}>{result.note}</div>}
-                    {/* 手動輸入重量欄位 */}
-                    <div style={{marginTop:'0.5rem'}}>
-                      <label style={{fontSize:'0.95em',color:'#185a9d'}}>如有實際秤重，請輸入：
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={manualWeight}
-                          onChange={e => setManualWeight(e.target.value)}
-                          style={{marginLeft:8,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc',width:80}}
-                          placeholder="實際重量(g)"
-                        />
-                        <span style={{marginLeft:4}}>g</span>
-                      </label>
-                    </div>
-                  </div>
+          {result && (
+            <div className="result" style={{display:'block'}}>
+              <div className="food-info">
+                <h3 className="food-name">{result.foodName}</h3>
+                <button className="add-to-diary" onClick={addToFoodDiary}>加入飲食記錄</button>
+              </div>
 
                   <div className="health-indices">
                     <div className="health-index">

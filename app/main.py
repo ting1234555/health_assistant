@@ -44,3 +44,17 @@ async def startup_event():
 async def shutdown_event():
     """應用程序關閉時的事件"""
     logger.info("Health Assistant API 正在關閉...")
+
+@app.get("/health")
+async def health_check():
+    """健康檢查端點"""
+    return {
+        "status": "healthy",
+        "routers": ["ai_router", "meal_router", "nutrition_router"],
+        "endpoints": [
+            "/ai/analyze-food-image/",
+            "/ai/analyze-food-image-with-weight/",
+            "/ai/health",
+            "/api/nutrition/lookup"
+        ]
+    }
