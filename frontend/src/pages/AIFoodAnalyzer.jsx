@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Chart from 'chart.js/auto';
 import './AIFoodAnalyzer.css';
+import { Camera, Upload, Zap, Search, PlusCircle, Trash2, Edit } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
@@ -33,6 +34,37 @@ function AIFoodAnalyzer() {
   const chartRef = useRef(null);
   // 新增一個 state 來存放預覽圖片的 URL
   const [previewImage, setPreviewImage] = useState(null);
+  const [manualWeight, setManualWeight] = useState('');
+  const [editingMealId, setEditingMealId] = useState(null);
+  const [editingWeight, setEditingWeight] = useState('');
+  // 計算顯示用的營養資訊（根據手動重量自動調整）
+  function getAdjustedNutrition() {
+    if (!result) return {};
+    const baseWeight = result.estimatedWeight || 100;
+    const targetWeight = manualWeight ? Number(manualWeight) : baseWeight;
+    if (!result.nutrition) return {};
+    const ratio = targetWeight / baseWeight;
+    const adjusted = {};
+    for (const [k, v] of Object.entries(result.nutrition)) {
+      adjusted[k] = Math.round((v || 0) * ratio);
+    }
+    return adjusted;
+  }
+  const adjustedNutrition = getAdjustedNutrition();
+
+  // --- 新增手動模式相關 state ---
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [manualFoodName, setManualFoodName] = useState('');
+  const [manualNutrition, setManualNutrition] = useState(null);
+  const [isManualLoading, setIsManualLoading] = useState(false);
+  const [manualError, setManualError] = useState('');
+
+  // --- 新增 AI 輔助模式相關 state ---
+  const [isAssistedMode, setIsAssistedMode] = useState(false);
+  
+  // --- 新增日記編輯相關 state ---
+  const [editingMeal, setEditingMeal] = useState(null);
+  const [editWeight, setEditWeight] = useState('');
 
   // 初始化日記
   useEffect(() => {
@@ -86,13 +118,131 @@ function AIFoodAnalyzer() {
     localStorage.setItem(`foodDiary_${today}`, JSON.stringify(diary));
     setFoodDiary(diary);
   }
+  // 修改 addToFoodDiary，以處理多食物日記格式
   function addToFoodDiary() {
-    if (!result) return alert('沒有可加入的分析結果。');
-    const meal = { ...result, id: Date.now(), timestamp: new Date().toISOString() };
-    const newDiary = [...foodDiary, meal];
-    saveFoodDiary(newDiary);
-    alert(`${meal.foodName} 已加入記錄！`);
+    // AI 模式
+    if (result && result.originalResponse && result.originalResponse.detected_foods) {
+      const newMeals = result.originalResponse.detected_foods.map(foodItem => ({
+        foodName: foodItem.food_name,
+        estimatedWeight: foodItem.estimated_weight,
+        nutrition: foodItem.nutrition,
+        id: Date.now() + Math.random(),
+        timestamp: new Date().toISOString()
+      }));
+      const newDiary = [...foodDiary, ...newMeals];
+      saveFoodDiary(newDiary);
+      alert(`${newMeals.length} 項食物已加入記錄！`);
+      return;
+    }
+    
+    // 模式 2 & 3: AI 輔助模式或完全手動模式
+    if ((isAssistedMode || isManualMode) && manualNutrition && manualWeight) {
+      const weight = parseFloat(manualWeight);
+      if (isNaN(weight) || weight <= 0) {
+        alert('請輸入有效的實際重量。');
+        return;
+      }
+      
+      const weightRatio = weight / 100;
+      const finalNutrition = Object.keys(manualNutrition).reduce((acc, key) => {
+        if (typeof manualNutrition[key] === 'number') {
+          acc[key] = manualNutrition[key] * weightRatio;
+        } else {
+          acc[key] = manualNutrition[key];
+        }
+        return acc;
+      }, {});
+
+      const meal = {
+        foodName: manualNutrition.food_name || manualFoodName,
+        estimatedWeight: weight,
+        nutrition: finalNutrition,
+        standardNutrition: manualNutrition, // <--- 儲存100g的標準營養
+        id: Date.now(),
+        timestamp: new Date().toISOString()
+      };
+      
+      const newDiary = [...foodDiary, meal];
+      saveFoodDiary(newDiary);
+      alert(`${meal.foodName} (${weight}g) 已加入記錄！`);
+
+      // 重設所有模式狀態
+      setIsManualMode(false);
+      setIsAssistedMode(false);
+      setManualFoodName('');
+      setManualNutrition(null);
+      setManualWeight('');
+      setError('');
+      setImageSrc(null);
+
+    } else {
+       alert('沒有可加入的分析結果，或手動資料不完整。');
+    }
   }
+
+  // --- DIARY EDIT/DELETE FUNCTIONS ---
+
+  const handleEditMeal = (meal) => {
+    setEditingMeal(meal);
+    setEditWeight(meal.estimatedWeight.toString());
+  };
+
+  const handleUpdateMeal = () => {
+    if (!editingMeal || !editWeight) return;
+
+    const weight = parseFloat(editWeight);
+    if (isNaN(weight) || weight <= 0) {
+      alert('請輸入有效的重量。');
+      return;
+    }
+    
+    // 重新計算營養
+    // 假設 meal 物件中儲存了 100g 的營養標準
+    // 這需要我們在儲存時做一些調整
+    const weightRatio = weight / 100;
+    const standardNutrition = editingMeal.standardNutrition; 
+    
+    // 如果沒有標準營養，我們無法重新計算，這是一個簡化處理
+    // 在真實應用中，我們會在 addToFoodDiary 時就把 100g 的標準營養存起來
+    if(!standardNutrition) {
+        alert("缺少標準營養數據，無法更新。");
+        setEditingMeal(null);
+        return;
+    }
+
+    const updatedNutrition = Object.keys(standardNutrition).reduce((acc, key) => {
+      if (typeof standardNutrition[key] === 'number') {
+        acc[key] = standardNutrition[key] * weightRatio;
+      } else {
+        acc[key] = standardNutrition[key];
+      }
+      return acc;
+    }, {});
+
+    const updatedDiary = foodDiary.map(m => 
+      m.id === editingMeal.id 
+        ? { ...m, estimatedWeight: weight, nutrition: updatedNutrition }
+        : m
+    );
+    
+    saveFoodDiary(updatedDiary);
+    setEditingMeal(null);
+    setEditWeight('');
+  };
+
+
+  const deleteMeal = (mealIdToDelete) => {
+    const confirmed = window.confirm("確定要刪除這筆紀錄嗎？");
+    if (confirmed) {
+        const newDiary = foodDiary.filter(meal => meal.id !== mealIdToDelete);
+        saveFoodDiary(newDiary);
+    }
+  };
+
+  const cancelEditing = () => {
+      setEditingMeal(null);
+      setEditWeight('');
+  };
 
   // 相機/圖片分析
   const startCamera = async () => {
@@ -139,7 +289,7 @@ function AIFoodAnalyzer() {
     const formData = new FormData();
     formData.append('file', imageSource);
     try {
-      const aiResponse = await fetch(`${API_BASE_URL}/ai/analyze-food-image/`, {
+      const aiResponse = await fetch(`${API_BASE_URL}/ai/analyze-food-image-with-weight/`, {
         method: 'POST', body: formData,
       });
       if (!aiResponse.ok) {
@@ -147,23 +297,97 @@ function AIFoodAnalyzer() {
         throw new Error(errorData.detail || `AI辨識失敗 (狀態碼: ${aiResponse.status})`);
       }
       const aiData = await aiResponse.json();
-      const foodName = aiData.food_name;
-      if (!foodName || foodName === 'Unknown') throw new Error('AI無法辨識出食物名稱。');
-      let analysis = {
-        foodName,
-        description: `AI 辨識結果：${foodName}`,
-        healthIndex: 75,
-        glycemicIndex: 50,
-        benefits: [`含有 ${foodName} 的營養成分`],
-        nutrition: { calories: 150, protein: 8, carbs: 20, fat: 5, fiber: 3, sugar: 2 },
-        vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
-        minerals: { 'Iron': 2, 'Calcium': 50 }
-      };
-      setResult(analysis);
+      
+      // V3 - 智慧降級處理
+      // Tier 1: 成功辨識
+      if (aiData.detected_foods && aiData.detected_foods.length > 0) {
+        setIsManualMode(false);
+        setIsAssistedMode(false);
+        // 以第一個辨識出的食物為主要顯示對象
+        const primaryFood = aiData.detected_foods[0];
+
+        let analysis = {
+          foodName: `${primaryFood.food_name}${aiData.detected_foods.length > 1 ? ` 等 ${aiData.detected_foods.length} 項` : ''}`,
+          description: `AI 辨識結果`,
+          healthIndex: 75,
+          glycemicIndex: 50,
+          benefits: [`含有 ${primaryFood.food_name} 的營養成分`],
+          // 營養素使用後端計算好的總和
+          nutrition: aiData.total_nutrition || primaryFood.nutrition, 
+          vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
+          minerals: { 'Iron': 2, 'Calcium': 50 },
+          // 重量也使用後端計算好的總和
+          estimatedWeight: aiData.total_estimated_weight,
+          // 其他欄位繼承後端回傳
+          weightConfidence: aiData.weight_confidence,
+          weightErrorRange: aiData.weight_error_range,
+          referenceObject: aiData.reference_object,
+          note: aiData.note, // 顯示我們精心設計的備註
+          // 儲存原始回傳，以便加入日記
+          originalResponse: aiData 
+        };
+
+        setResult(analysis);
+
+      // Tier 2: AI 重量估算失敗，但提供了食物建議
+      } else if (aiData.fallback_food_suggestion) {
+        setError(aiData.note);
+        setIsAssistedMode(true);
+        setIsManualMode(false);
+        setResult(null);
+        // 自動查詢建議的食物
+        setManualFoodName(aiData.fallback_food_suggestion.food_name);
+        handleManualLookup(aiData.fallback_food_suggestion.food_name);
+      
+      // Tier 3: 完全失敗，啟用手動模式
+      } else {
+        setError(aiData.note || 'AI無法辨識出任何食物項目，請嘗試手動輸入。');
+        setIsManualMode(true);
+        setIsAssistedMode(false);
+        setResult(null);
+      }
     } catch (err) {
-      setError(`分析失敗: ${err.message}`);
+      const errorMessage = err.message || '分析時發生未知錯誤，請稍後再試。';
+      setError(errorMessage);
+      setResult(null);
+      setIsManualMode(true); // 發生任何其他錯誤也切換到完全手動模式
+      setIsAssistedMode(false);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // --- 新增手動查詢營養的函式 (可選傳入 foodName) ---
+  const handleManualLookup = async (foodNameToLookup) => {
+    const foodName = foodNameToLookup || manualFoodName;
+    if (!foodName) {
+      setManualError('請輸入食物名稱。');
+      return;
+    }
+    setIsManualLoading(true);
+    setManualError('');
+    setManualNutrition(null);
+    try {
+      const response = await fetch(`http://localhost:8000/api/nutrition/lookup?food_name=${encodeURIComponent(foodName)}`);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || '查詢失敗');
+      }
+      const data = await response.json();
+      console.log('營養查詢成功:', data);
+      setManualNutrition(data);
+    } catch (err) {
+      console.error('營養查詢錯誤:', err);
+      let errorMessage = '查詢失敗，請稍後再試';
+      
+      if (err.message) {
+        // 處理可能的模板字符串問題
+        errorMessage = err.message.replace(/\$\{encodeURIComponent\(foodName\)\}/g, foodName);
+      }
+      
+      setManualError(errorMessage);
+    } finally {
+      setIsManualLoading(false);
     }
   };
 
@@ -219,6 +443,10 @@ function AIFoodAnalyzer() {
 
       {tab === 'analyzer' && (
         <div id="analyzerContent">
+          {/* 新增提示訊息 */}
+          <div style={{textAlign:'center',color:'#185a9d',fontWeight:'bold',marginBottom:'0.5rem',fontSize:'1rem'}}>
+            請將硬幣、餐具等標準物品放在食物旁邊一起拍照，AI會更準確！
+          </div>
           <div className="camera-container" style={{position:'relative', width:'100%', maxWidth:300, margin:'0 auto'}}>
             {/* 預覽圖片優先顯示，否則顯示相機畫面 */}
             {previewImage ? (
@@ -245,82 +473,220 @@ function AIFoodAnalyzer() {
 
           {error && <div style={{color:'red',textAlign:'center',margin:'1rem 0'}}>{error}</div>}
 
-          {result && (
-            <div className="result" style={{display:'block'}}>
-              <div className="food-info">
-                <h3 className="food-name">{result.foodName}</h3>
-                <button className="add-to-diary" onClick={addToFoodDiary}>加入飲食記錄</button>
-              </div>
-
-              <div className="health-indices">
-                <div className="health-index">
-                  <div className="index-label">健康指數</div>
-                  <div className="index-meter">
-                    <div className="meter-fill" style={{width:`${result.healthIndex||75}%`, background:'linear-gradient(45deg,#43cea2,#185a9d)'}}></div>
+          {/* --- 顯示 AI 結果或手動輸入介面 --- */}
+          {!loading && (
+            <div className="analysis-section">
+              {/* AI 模式結果顯示 */}
+              {result && !isManualMode && !isAssistedMode && (
+                <div className="result" style={{display:'block'}}>
+                  <div className="food-info">
+                    <h3 className="food-name">{result.foodName}</h3>
+                    <button className="add-to-diary" onClick={addToFoodDiary}>加入飲食記錄</button>
                   </div>
-                  <div className="index-value">{result.healthIndex||75}/100</div>
-                </div>
-                <div className="health-index">
-                  <div className="index-label">升糖指數</div>
-                  <div className="index-meter">
-                    <div className="meter-fill" style={{width:`${result.glycemicIndex||50}%`, background:'linear-gradient(45deg,#ff9a9e,#fad0c4)'}}></div>
+                  {/* 顯示重量、信心度、誤差範圍 */}
+                  <div className="weight-estimation" style={{margin:'1rem 0', textAlign:'center'}}>
+                    <div>預估重量：<b>{manualWeight !== '' ? `${manualWeight} g (手動)` : result.estimatedWeight !== undefined ? `${Math.round(result.estimatedWeight)} g` : '--'}</b></div>
+                    <div>信心度：<b>{result.weightConfidence !== undefined ? `${Math.round(result.weightConfidence*100)}%` : '--'}</b></div>
+                    <div>誤差範圍：<b>{result.weightErrorRange ? `${Math.round(result.weight_error_range[0])} ~ ${Math.round(result.weight_error_range[1])} g` : '--'}</b></div>
+                    {result.referenceObject && <div>參考物：{result.referenceObject}</div>}
+                    {result.note && <div style={{color:'#888', fontSize:'0.95em'}}>{result.note}</div>}
+                    {/* 手動輸入重量欄位 */}
+                    <div style={{marginTop:'0.5rem'}}>
+                      <label style={{fontSize:'0.95em',color:'#185a9d'}}>如有實際秤重，請輸入：
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={manualWeight}
+                          onChange={e => setManualWeight(e.target.value)}
+                          style={{marginLeft:8,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc',width:80}}
+                          placeholder="實際重量(g)"
+                        />
+                        <span style={{marginLeft:4}}>g</span>
+                      </label>
+                    </div>
                   </div>
-                  <div className="index-value">{result.glycemicIndex||50}/100</div>
+
+                  <div className="health-indices">
+                    <div className="health-index">
+                      <div className="index-label">健康指數</div>
+                      <div className="index-meter">
+                        <div className="meter-fill" style={{width:`${result.healthIndex||75}%`, background:'linear-gradient(45deg,#43cea2,#185a9d)'}}></div>
+                      </div>
+                      <div className="index-value">{result.healthIndex||75}/100</div>
+                    </div>
+                    <div className="health-index">
+                      <div className="index-label">升糖指數</div>
+                      <div className="index-meter">
+                        <div className="meter-fill" style={{width:`${result.glycemicIndex||50}%`, background:'linear-gradient(45deg,#ff9a9e,#fad0c4)'}}></div>
+                      </div>
+                      <div className="index-value">{result.glycemicIndex||50}/100</div>
+                    </div>
+                  </div>
+
+                  <p className="food-description">{result.description || `這是 ${result.foodName}`}</p>
+
+                  <div className="benefits-tags">
+                    {(result.benefits||[`${result.foodName} 的營養價值`]).map((b,i)=>(
+                      <span key={i} className="benefit-tag">{b}</span>
+                    ))}
+                  </div>
+
+                  <div className="nutrition-details">
+                    <div className="nutrition-section">
+                      <h4 className="nutrition-section-title">基本營養素</h4>
+                      <div className="nutrition-grid">
+                        {Object.entries(adjustedNutrition).map(([k,v])=>(
+                          <div key={k} className="nutrition-item">
+                            <div className="nutrition-label">{k}</div>
+                            <div className="nutrition-value">
+                              {v !== undefined ? `${v}${k === 'calories' ? ' 卡' : ' g'}` : '--'}
+                              {manualWeight && result.nutrition && result.estimatedWeight &&
+                                <span style={{fontSize:'0.85em',color:'#888',marginLeft:6}}>
+                                  (AI:{Math.round(result.nutrition[k])}{k === 'calories' ? '卡' : 'g'})
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="nutrition-section">
+                      <h4 className="nutrition-section-title">維生素</h4>
+                      <div className="nutrition-grid">
+                        {result.vitamins && Object.entries(result.vitamins).map(([k,v])=>(
+                          <div key={k} className="nutrition-item">
+                            <div className="nutrition-label">{k}</div>
+                            <div className="nutrition-value">{v} mg</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="nutrition-section">
+                      <h4 className="nutrition-section-title">礦物質</h4>
+                      <div className="nutrition-grid">
+                        {result.minerals && Object.entries(result.minerals).map(([k,v])=>(
+                          <div key={k} className="nutrition-item">
+                            <div className="nutrition-label">{k}</div>
+                            <div className="nutrition-value">{v} mg</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {profile && (
+                    <div className="daily-recommendation">
+                      <div className="recommendation-title">💡 個人化建議</div>
+                      <div className="recommendation-text">
+                        這份食物約佔您每日熱量建議的 {adjustedNutrition.calories && profile.dailyCalories ? Math.round((adjustedNutrition.calories / profile.dailyCalories) * 100) : '--'}%。
+                        {manualWeight && result.nutrition && result.estimatedWeight &&
+                          <span style={{fontSize:'0.95em',color:'#888',marginLeft:8}}>
+                            (AI:{Math.round(result.nutrition.calories)}卡)
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
-              <p className="food-description">{result.description || `這是 ${result.foodName}`}</p>
+              {/* AI 輔助模式介面 */}
+              {isAssistedMode && (
+                <div className="assisted-mode-card">
+                  <h3 className="text-lg font-bold text-yellow-600 mb-2">AI 輔助記錄模式</h3>
+                  {error && <p className="text-sm text-gray-600 mb-3">{error}</p>}
+                  
+                  {isManualLoading && <p>查詢營養資訊中...</p>}
+                  {manualError && <p className="text-sm text-red-600 mb-3">{manualError}</p>}
 
-              <div className="benefits-tags">
-                {(result.benefits||[`${result.foodName} 的營養價值`]).map((b,i)=>(
-                  <span key={i} className="benefit-tag">{b}</span>
-                ))}
-              </div>
-
-              <div className="nutrition-details">
-                <div className="nutrition-section">
-                  <h4 className="nutrition-section-title">基本營養素</h4>
-                  <div className="nutrition-grid">
-                    {Object.entries(result.nutrition||{}).map(([k,v])=>(
-                      <div key={k} className="nutrition-item">
-                        <div className="nutrition-label">{k}</div>
-                        <div className="nutrition-value">{v}</div>
+                  {manualNutrition && (
+                    <div>
+                      <p className="text-md text-gray-800 mb-4">
+                        AI 建議的食物「<strong>{manualNutrition.food_name || manualFoodName}</strong>」每 100g 的營養如下：
+                      </p>
+                  
+                  {/* --- 新增：顯示100g營養成分 --- */}
+                  <div className="nutrition-grid mb-4">
+                    {Object.entries(manualNutrition)
+                      .filter(([key]) => !['food_name', 'chinese_name', 'error'].includes(key))
+                      .map(([key, value]) => (
+                      <div key={key} className="nutrition-item">
+                        <span className="nutrition-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                        <span className="nutrition-value">{typeof value === 'number' ? value.toFixed(1) : value} {key === 'calories' ? 'kcal' : 'g'}</span>
                       </div>
                     ))}
                   </div>
-                </div>
 
-                <div className="nutrition-section">
-                  <h4 className="nutrition-section-title">維生素</h4>
-                  <div className="nutrition-grid">
-                    {result.vitamins && Object.entries(result.vitamins).map(([k,v])=>(
-                      <div key={k} className="nutrition-item">
-                        <div className="nutrition-label">{k}</div>
-                        <div className="nutrition-value">{v} mg</div>
+                  <div className="manual-weight-input">
+                     <label className="block text-sm font-medium text-gray-700 mb-1">請輸入這份餐點的實際重量 (g):</label>
+                     <input
+                            type="number"
+                            value={manualWeight}
+                            onChange={(e) => setManualWeight(e.target.value)}
+                            placeholder="例如：250"
+                            className="input-field w-full"
+                          />
+                  </div>
+                  <button onClick={addToFoodDiary} className="btn-primary mt-4">加入日記</button>
+                </div>
+              )}
+            </div>
+          )}
+
+              {/* 完全手動模式介面 */}
+              {isManualMode && (
+                <div className="manual-mode-card">
+                  <h3 className="text-lg font-bold text-gray-700 mb-2">手動記錄模式</h3>
+                  {manualError && <p className="text-sm text-red-600 mb-3">{manualError}</p>}
+                  <p className="text-sm text-gray-500 mb-4">
+                    AI 無法自動辨識圖片，或辨識結果不準確？沒問題，您可以在這裡手動查詢並記錄您的餐點。
+                  </p>
+                  
+                  <div className="manual-lookup-form">
+                    <input
+                      type="text"
+                      value={manualFoodName}
+                      onChange={(e) => setManualFoodName(e.target.value)}
+                      placeholder="輸入食物名稱，例如：雞胸肉"
+                      className="input-field"
+                    />
+                    <button onClick={handleManualLookup} disabled={isManualLoading} className="btn-secondary ml-2">
+                      {isManualLoading ? '查詢中...' : <><Search className="mr-1" />查詢營養</>}
+                    </button>
+                  </div>
+
+                  {manualNutrition && (
+                    <div className="manual-nutrition-details">
+                      <h4>營養成分</h4>
+                      <div className="nutrition-grid">
+                        {Object.entries(manualNutrition).map(([k,v])=>(
+                          <div key={k} className="nutrition-item">
+                            <div className="nutrition-label">{k}</div>
+                            <div className="nutrition-value">{v} {k === 'calories' ? '卡' : 'g'}</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="nutrition-section">
-                  <h4 className="nutrition-section-title">礦物質</h4>
-                  <div className="nutrition-grid">
-                    {result.minerals && Object.entries(result.minerals).map(([k,v])=>(
-                      <div key={k} className="nutrition-item">
-                        <div className="nutrition-label">{k}</div>
-                        <div className="nutrition-value">{v} mg</div>
+                      <div style={{marginTop:'0.5rem'}}>
+                        <label style={{fontSize:'0.95em',color:'#185a9d'}}>如有實際秤重，請輸入：
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={manualWeight}
+                            onChange={e => setManualWeight(e.target.value)}
+                            style={{marginLeft:8,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc',width:80}}
+                            placeholder="實際重量(g)"
+                          />
+                          <span style={{marginLeft:4}}>g</span>
+                        </label>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {profile && (
-                <div className="daily-recommendation">
-                  <div className="recommendation-title">💡 個人化建議</div>
-                  <div className="recommendation-text">
-                    這份食物約佔您每日熱量建議的 {Math.round((result.nutrition?.calories / profile.dailyCalories) * 100)}%。
-                  </div>
+                      <button onClick={addToFoodDiary} className="btn-primary mt-3">加入飲食記錄</button>
+                      <button onClick={() => setIsManualMode(false)} className="btn-secondary mt-2 ml-2">返回分析模式</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -441,9 +807,38 @@ function AIFoodAnalyzer() {
               <div className="food-diary-list">
                 {foodDiary.map(meal => (
                   <div className="food-diary-item" key={meal.id}>
-                    <div className="food-diary-name">{meal.foodName}</div>
-                    <div className="food-diary-time">{new Date(meal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                    <div className="food-diary-calories">{Math.round(meal.nutrition?.calories||0)} 卡</div>
+                    {editingMeal && editingMeal.id === meal.id ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span className="food-diary-name">{meal.foodName}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <input
+                                  type="number"
+                                  value={editWeight}
+                                  onChange={(e) => setEditWeight(e.target.value)}
+                                  style={{ width: '70px', padding: '4px', border: '1px solid #ccc', borderRadius: '4px' }}
+                              />
+                              <span>g</span>
+                              <button onClick={handleUpdateMeal} style={{ padding: '4px 8px', background: '#43cea2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>保存</button>
+                              <button onClick={cancelEditing} style={{ padding: '4px 8px', background: '#aaa', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>取消</button>
+                          </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <div style={{ flex: 1 }}>
+                              <div className="food-diary-name">{meal.foodName}</div>
+                              <div style={{ fontSize: '0.8em', color: '#888' }}>{new Date(meal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                          <div style={{ flex: 1, textAlign: 'center' }}>
+                              <span>{Math.round(meal.estimatedWeight || 0)}g</span>
+                              <span style={{ margin: '0 10px' }}>/</span>
+                              <span className="food-diary-calories">{Math.round(meal.nutrition?.calories || 0)} 卡</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '15px' }}>
+                              <button onClick={() => handleEditMeal(meal)} style={{ background: 'none', border: 'none', color: '#185a9d', cursor: 'pointer', fontSize: '0.9em' }}>修改</button>
+                              <button onClick={() => deleteMeal(meal.id)} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '0.9em' }}>刪除</button>
+                          </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -1,6 +1,8 @@
 # 檔案路徑: backend/app/services/ai_service.py
 
 from transformers.pipelines import pipeline
+from transformers.models.auto.modeling_auto import AutoModelForImageClassification
+from transformers.models.auto.image_processing_auto import AutoImageProcessor
 from PIL import Image
 import io
 import logging
@@ -15,15 +17,22 @@ image_classifier = None
 def load_model():
     """載入模型的函數"""
     global image_classifier
-    
     try:
         logger.info("正在載入食物辨識模型...")
-        # 載入模型 - 移除不支持的參數
-        image_classifier = pipeline(
-            "image-classification", 
-            model="juliensimon/autotrain-food101-1471154053",
-            device=-1,  # 使用CPU
+        # 先載入 model 和 processor，分別傳入 cache_dir
+        model = AutoModelForImageClassification.from_pretrained(
+            "juliensimon/autotrain-food101-1471154053",
             cache_dir="/tmp/huggingface"
+        )
+        processor = AutoImageProcessor.from_pretrained(
+            "juliensimon/autotrain-food101-1471154053",
+            cache_dir="/tmp/huggingface"
+        )
+        image_classifier = pipeline(
+            "image-classification",
+            model=model,
+            image_processor=processor,
+            device=-1  # 使用CPU
         )
         logger.info("模型載入成功！")
         return True
@@ -89,8 +98,7 @@ def classify_food_image(image_bytes: bytes) -> str:
         logger.error(f"圖片分類過程中發生錯誤: {str(e)}")
         return f"Error: {str(e)}"
 
-# 在模塊載入時嘗試載入模型
-logger.info("初始化 AI 服務...")
-load_model()
+# 延遲初始化 - 不在模塊載入時載入模型
+logger.info("AI 服務模塊已載入，模型將在首次使用時載入")
 
-__all__ = ["classify_food_image"]
+__all__ = ["classify_food_image", "load_model"]

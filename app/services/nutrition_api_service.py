@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # 從環境變數中獲取 API 金鑰
-USDA_API_KEY = os.getenv("USDA_API_KEY", "DEMO_KEY")
+USDA_API_KEY = os.getenv("USDA_API_KEY", "4guYMPsU2jSnN6GH6NjexZmSh1VWrgmOIoH6d6ju")
 USDA_API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 # 我們關心的主要營養素及其在 USDA API 中的名稱或編號
@@ -83,11 +83,25 @@ def fetch_nutrition_data(food_name: str):
             return None
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"請求 USDA API 時發生錯誤: {e}")
-        return None
+        # 當 API 請求失敗時（例如網路問題或 4xx/5xx 錯誤），提供更詳細的日誌
+        if isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 429:
+            logger.error("USDA API 請求過於頻繁 (429 Too Many Requests). 您提供的 API KEY 可能已達上限，或後備的 DEMO_KEY 已達上限。請考慮至 https://fdc.nal.usda.gov/api-key.html 申請免費的個人 API 金鑰，並將其設定在 .env 檔案中。")
+        else:
+            logger.error(f"請求 USDA API 時發生網路錯誤: {e}")
+        
+        # 即使 API 失敗，也回傳一個空的營養結構，以避免主流程中斷
+        return {
+            'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 
+            'fiber': 0, 'sugar': 0, 'sodium': 0,
+            'error': f'查詢 {food_name} 營養資訊時發生問題。可能是暫時的網路錯誤或 API 請求次數達到上限。'
+        }
     except Exception as e:
         logger.error(f"處理 API 回應時發生未知錯誤: {e}")
-        return None
+        return {
+            'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 
+            'fiber': 0, 'sugar': 0, 'sodium': 0,
+            'error': 'Unknown error processing nutrition data'
+        }
 
 if __name__ == '__main__':
     # 測試此模組的功能

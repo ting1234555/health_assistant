@@ -9,8 +9,8 @@ from io import BytesIO
 from PIL import Image
 import json
 from dotenv import load_dotenv
-from .app.database import engine, Base
-from .app.routers import ai_router, meal_router
+from app.database import engine, Base
+from app.routers import ai_router, meal_router
 
 # 設定 Hugging Face 及 Torch 快取目錄
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"

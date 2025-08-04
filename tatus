@@ -1,0 +1,5 @@
+[33m91bb6fd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31mhuggingface/main[m[33m, [m[1;31mhuggingface/HEAD[m[33m)[m fix: set cache_dir to /tmp/huggingface for transformers pipeline
+[33m0983661[m fix: set all possible model and dataset cache dirs to /tmp to avoid all permission errors on Hugging Face Space
+[33m657b9c2[m fix: set all model cache dirs to /tmp to avoid permission issues on Hugging Face Space
+[33m6049236[m fix: add sqlalchemy to requirements and set TRANSFORMERS_CACHE for Hugging Face Space
+[33mc80cf5d[m chore: 刪除不必要檔案，進一步精簡專案結構
