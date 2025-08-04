@@ -1,7 +1,34 @@
-# Core dependencies for Gradio
-gradio>=4.0.0
+# Core dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
 Pillow>=10.3.0
+transformers>=4.40.0
+torch>=2.2.0
+pydantic>=2.5.0
+anthropic>=0.18.0
+python-dotenv>=1.0.0
+httpx>=0.27.0
 
-# Optional: For enhanced functionality
-requests>=2.31.0
+# Weight estimation dependencies
 numpy>=1.24.0
+opencv-python>=4.8.0
+ultralytics>=8.0.0
+
+# Database
+sqlalchemy>=2.0.23
+
+# AI 功能套件（修正版本）
+torchvision>=0.16.0
+
+# Gradio for Hugging Face Spaces
+gradio>=4.0.0
+
+# Development dependencies
+pytest>=8.4.1
+pytest-cov>=6.2.1
+pytest-asyncio>=1.0.0
+black>=24.4.2
+isort>=5.13.2
+mypy>=1.10.0
+sqlalchemy
