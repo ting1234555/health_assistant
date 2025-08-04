@@ -26,6 +26,16 @@ env/
 ENV/
 .env
 .venv
+.venv310/
+
+# AI Models (large binary files)
+*.pt
+*.pth
+*.onnx
+*.bin
+*.safetensors
+yolov5nu.pt
+yolov8n.pt
 
 # IDE
 .idea/
