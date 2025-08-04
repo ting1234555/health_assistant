@@ -1,0 +1,7 @@
+# Core dependencies for Gradio
+gradio>=4.0.0
+Pillow>=10.3.0
+
+# Optional: For enhanced functionality
+requests>=2.31.0
+numpy>=1.24.0
