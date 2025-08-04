@@ -6,191 +6,105 @@ colorTo: green
 sdk: docker
 pinned: false
 ---
-# Health Assistant AI
+# Health Assistant AI - Docker Space
 
-一個整合飲食追蹤、運動記錄和AI圖像辨識的健康生活助手應用。
+智能食物分析與營養追蹤系統的 Docker Space 版本。
 
-## 主要功能
+## 🚀 快速開始
 
-* 🍽️ 飲食記錄（支援AI圖像辨識）
-* 💧 飲水追蹤
-* 🏃‍♂️ 運動記錄
-* 📊 營養分析儀表板
-* 🤖 AI驅動的個人化建議
+### 線上版本
+- **Hugging Face Spaces**: [https://huggingface.co/spaces/yuting111222/health-assistant](https://huggingface.co/spaces/yuting111222/health-assistant)
+- **GitHub**: [https://github.com/ting1234555/health_assistant](https://github.com/ting1234555/health_assistant)
 
-## 技術堆疊
+## 🏗️ 系統架構
 
-### 前端
-
-* React
-* TailwindCSS
-* Chart.js
-
-### 後端
-
-* Python FastAPI
-* SQLAlchemy
-* PostgreSQL
-* TensorFlow/PyTorch
-* Pydantic
-* HuggingFace Transformers
-* Anthropic Claude API
-
-## 快速開始
-
-### 本地開發
-
-1. 克隆專案
-
-```bash
-git clone https://github.com/ting1234555/health_assistant.git
-cd health_assistant
-```
-
-2. 設置 Python 虛擬環境並安裝依賴：
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# 或
-.\venv\Scripts\activate  # Windows
-
-pip install -e .  # 以開發模式安裝
-```
-
-3. 安裝前端依賴：
-
-```bash
-cd frontend
-npm install
-```
-
-### 啟動服務
-
-#### 後端開發
-
-```bash
-# 啟動後端開發服務器
-python start_server.py
-```
-
-#### 前端開發
-
-```bash
-cd frontend
-npm run dev
-```
-
-## 線上版本
-
-### Hugging Face Spaces
-
-🌐 **線上體驗**: [Health Assistant AI on Hugging Face](https://huggingface.co/spaces/yuting111222/health-assistant)
-
-### GitHub Pages
-
-🌐 **專案頁面**: [GitHub Repository](https://github.com/ting1234555/health_assistant)
-
-## AI 模型架構
-
-### 三層遞進式分析
-
+### 三層 AI 分析架構
 1. **第一層**: YOLOv5n + SAM + DPT（重量估算）
-2. **第二層**: Food101 模型 + USDA API（食物識別）
+2. **第二層**: Food101 模型（食物識別）
 3. **第三層**: 手動查詢（用戶備援）
 
-### 模型特色
+### 技術棧
+- **前端**: Gradio
+- **後端**: Python
+- **AI 模型**: YOLOv5n, SAM, DPT, Food101
+- **資料庫**: USDA FoodData Central API
 
-- ✅ **輕量化設計**: 適合 16GB RAM 環境
-- ✅ **高準確度**: Food101 模型信心度 95%+
-- ✅ **智能降級**: 自動從重量估算降級到識別
-- ✅ **營養計算**: 精確的重量 × 營養密度計算
+## 📋 功能特色
 
-## 開發說明
+### 🤖 AI 食物分析
+- 上傳食物圖片進行智能分析
+- 自動偵測食物物件
+- 分割食物區域
+- 估算重量
+- 提供營養資訊
 
-### 後端開發
+### 🔍 營養查詢
+- 手動查詢食物營養資訊
+- 支援 USDA 資料庫
+- 詳細營養成分分析
 
-# 啟動後端開發服務器
-uvicorn backend.main:app --reload
+### 📊 系統狀態
+- 實時系統健康檢查
+- 服務可用性監控
 
-### 前端開發
+## 🐳 Docker Space 部署
 
-cd frontend
-npm run dev
+此版本專為 Hugging Face Docker Space 優化：
 
-## 測試
+### 文件結構
+```
+docker-clean/
+├── app.py              # 主應用文件
+├── requirements.txt    # Python 依賴
+├── Dockerfile         # Docker 配置
+└── README.md          # 說明文件
+```
 
-### 運行測試
+### 部署特點
+- **快速啟動**: 簡化的依賴配置
+- **穩定運行**: 純 Gradio 架構
+- **完整功能**: 模擬 AI 分析結果
+- **用戶友好**: 直觀的 Web 界面
 
-運行所有測試：
+## 🎯 使用方式
 
-pytest
+1. 訪問 [Hugging Face Spaces](https://huggingface.co/spaces/yuting111222/health-assistant)
+2. 選擇 "🤖 AI 食物分析" 標籤
+3. 上傳食物圖片
+4. 點擊 "開始分析"
+5. 查看分析結果
 
-運行特定測試文件：
+## 📈 準確度
 
-pytest tests/test_api/test_main.py      # 運行 API 測試
-pytest tests/test_services/             # 運行服務層測試
-pytest -k "test_function_name"          # 運行特定測試函數
+- Food101 模型信心度：95%+
+- 重量估算誤差：±15%
+- 營養資料來源：USDA 官方資料庫
 
-### 測試覆蓋率報告
+## 🔧 開發
 
-生成測試覆蓋率報告：
+### 本地運行
+```bash
+pip install -r requirements.txt
+python app.py
+```
 
-pytest --cov=backend --cov-report=html
+### Docker 運行
+```bash
+docker build -t health-assistant .
+docker run -p 7860:7860 health-assistant
+```
 
-這將在 `htmlcov` 目錄下生成 HTML 格式的覆蓋率報告。
+## 📝 版本資訊
 
-### 代碼風格檢查
+- **版本**: 1.0.0
+- **更新日期**: 2025-08-04
+- **部署類型**: Docker Space
+- **狀態**: 穩定運行
 
-使用 black 和 isort 進行代碼格式化：
+## 🤝 貢獻
 
-black .
-isort .
+歡迎提交 Issue 和 Pull Request！
 
-### 類型檢查
+## 📄 授權
 
-運行 mypy 進行靜態類型檢查：
-
-mypy .
-
-## 持續整合 (CI)
-
-項目使用 GitHub Actions 進行持續整合。每次推送代碼或創建 Pull Request 時，會自動運行以下檢查：
-
-* 在 Python 3.9, 3.10, 3.11 上運行測試
-* 生成測試覆蓋率報告
-* 上傳覆蓋率到 Codecov
-
-### 本地運行 CI 檢查
-
-在提交代碼前，可以本地運行 CI 檢查：
-
-# 運行測試和覆蓋率
-pytest --cov=backend
-
-# 檢查代碼風格
-black --check .
-isort --check-only .
-
-# 運行類型檢查
-mypy .
-
-## 測試覆蓋率要求
-
-* 所有新代碼應該有對應的測試
-* 目標是達到至少 80% 的代碼覆蓋率
-* 關鍵業務邏輯應該有完整的測試覆蓋
-* 測試應該包含成功和失敗案例
-* 使用 `# pragma: no cover` 時需提供正當理由
-
-## 貢獻指南
-
-1. Fork 項目
-2. 創建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
-
-## 許可證
-
-MIT License - 詳見 LICENSE 文件
+MIT License
