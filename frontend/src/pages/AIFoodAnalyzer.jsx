@@ -313,26 +313,49 @@ function AIFoodAnalyzer() {
     try {
       const response = await apiService.uploadAndAnalyze(imageSource);
       
-      if (!response.success) {
-        throw new Error(response.message || '分析失敗');
-      }
-      
       console.log('分析成功:', response);
-      const data = response.data;
-      const foodName = data.food_name;
+      
+      // 處理後端返回的數據格式
+      const data = response;
+      const foodName = data.food_type || data.food_name;
       if (!foodName || foodName === 'Unknown') throw new Error('AI無法辨識出食物名稱。');
+      
+      // 計算健康指數（基於營養成分）
+      const nutrition = data.nutrition || {};
+      const calories = nutrition.calories || 150;
+      const protein = nutrition.protein || 5;
+      const fat = nutrition.fat || 3;
+      const carbs = nutrition.carbs || 25;
+      
+      // 簡單的健康指數計算
+      let healthIndex = 75;
+      if (protein > 20) healthIndex += 10;
+      if (fat < 10) healthIndex += 5;
+      if (calories < 200) healthIndex += 5;
+      if (carbs < 30) healthIndex += 5;
+      
+      // 升糖指數（基於碳水化合物含量）
+      let glycemicIndex = 50;
+      if (carbs > 40) glycemicIndex += 20;
+      if (carbs < 15) glycemicIndex -= 15;
       
       let analysis = {
         foodName,
-        description: `AI 辨識結果：${foodName}`,
-        healthIndex: 75,
-        glycemicIndex: 50,
-        benefits: [`含有 ${foodName} 的營養成分`],
-        nutrition: data.nutrition || { calories: 150, protein: 8, carbs: 20, fat: 5, fiber: 3, sugar: 2 },
+        description: `AI 辨識結果：${foodName} (${data.estimated_weight}g)`,
+        healthIndex: Math.min(100, healthIndex),
+        glycemicIndex: Math.max(0, Math.min(100, glycemicIndex)),
+        benefits: [
+          `含有 ${foodName} 的營養成分`,
+          `估算重量：${data.estimated_weight}g`,
+          `信心度：${(data.weight_confidence * 100).toFixed(1)}%`
+        ],
+        nutrition: nutrition,
         vitamins: { 'Vitamin C': 15, 'Vitamin A': 10 },
         minerals: { 'Iron': 2, 'Calcium': 50 },
-        estimatedWeight: data.weight || 100,
-        confidence: data.confidence || 0
+        estimatedWeight: data.estimated_weight || 100,
+        confidence: data.weight_confidence || 0,
+        referenceObject: data.reference_object,
+        note: data.note
       };
       setResult(analysis);
     } catch (err) {

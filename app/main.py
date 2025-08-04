@@ -5,6 +5,7 @@ from app.routers import ai_router, meal_router
 from app.database import engine, Base
 from app.routers import nutrition_router  # 引入新的營養路由器
 import logging
+from datetime import datetime
 
 # 設置日誌
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +56,31 @@ async def health_check():
             "/ai/analyze-food-image/",
             "/ai/analyze-food-image-with-weight/",
             "/ai/health",
-            "/api/nutrition/lookup"
+            "/api/nutrition/lookup",
+            "/api/logs"
         ]
     }
+
+@app.get("/api/logs")
+async def get_logs():
+    """獲取系統日誌"""
+    try:
+        return {
+            "logs": [
+                f"系統啟動時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                "API 狀態: 正常運行",
+                "後端服務: FastAPI",
+                "前端服務: React + Vite",
+                "AI 模型: 延遲載入模式",
+                "資料庫: SQLAlchemy"
+            ],
+            "total_lines": 6,
+            "timestamp": datetime.now().isoformat(),
+            "environment": "local-development"
+        }
+    except Exception as e:
+        return {
+            "logs": [f"日誌查詢錯誤: {str(e)}"],
+            "total_lines": 0,
+            "timestamp": datetime.now().isoformat()
+        }

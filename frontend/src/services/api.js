@@ -1,5 +1,5 @@
 // API 服務配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://huggingface.co/spaces/yuting111222/health-assistant';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 class ApiService {
     constructor() {
@@ -61,9 +61,24 @@ class ApiService {
 
     // 上傳圖片並分析
     async uploadAndAnalyze(file) {
-        // 將文件轉換為 base64 或上傳到臨時存儲
-        const imageUrl = await this.uploadImage(file);
-        return this.analyzeFood(imageUrl);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch(`${this.baseURL}/ai/analyze-food-image-with-weight/`, {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('圖片分析失敗:', error);
+            throw error;
+        }
     }
 
     // 上傳圖片（模擬）

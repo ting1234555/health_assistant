@@ -1,7 +1,24 @@
-# Core dependencies for Gradio
-gradio>=4.0.0
+# Core dependencies for FastAPI
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# AI and ML
+transformers>=4.35.0
+torch>=2.0.0
 Pillow>=10.3.0
+numpy>=1.24.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Environment variables
+python-dotenv>=1.0.0
 
 # Optional: For enhanced functionality
-requests>=2.31.0
-numpy>=1.24.0
+gradio>=4.0.0
