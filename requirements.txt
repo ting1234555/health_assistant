@@ -21,6 +21,9 @@ sqlalchemy>=2.0.23
 # AI 功能套件（修正版本）
 torchvision>=0.16.0
 
+# Gradio for Hugging Face Spaces
+gradio>=4.0.0
+
 # Development dependencies
 pytest>=8.4.1
 pytest-cov>=6.2.1
